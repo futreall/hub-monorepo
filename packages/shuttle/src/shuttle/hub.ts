@@ -16,7 +16,7 @@ export type HubClient = {
   client: HubRpcClient;
 };
 
-const MAX_RECEIVE_MESSAGE_LENGTH = 10 * 1024 * 1024; // 10mb
+const MAX_RECEIVE_MESSAGE_LENGTH = 10 * 1024 * 1024; // 10 MB
 
 const defaultOptions = {
   "grpc.max_receive_message_length": MAX_RECEIVE_MESSAGE_LENGTH,
@@ -32,13 +32,19 @@ export const getHubEventCacheKey = (event: HubEvent): string => {
     const hash = bytesToHex(event.mergeMessageBody.message.hash);
     const deletedHashes = event.mergeMessageBody.deletedMessages.map((message) => bytesToHex(message.hash));
     return `hub:evt:merge:${[hash, ...deletedHashes].join(":")}`;
-  } else if (isRevokeMessageHubEvent(event)) {
+  }
+  
+  if (isRevokeMessageHubEvent(event)) {
     const hash = bytesToHex(event.revokeMessageBody.message.hash);
     return `hub:evt:revoke:${hash}`;
-  } else if (isPruneMessageHubEvent(event)) {
+  }
+  
+  if (isPruneMessageHubEvent(event)) {
     const hash = bytesToHex(event.pruneMessageBody.message.hash);
     return `hub:evt:prune:${hash}`;
-  } else if (isMergeUsernameProofHubEvent(event)) {
+  }
+  
+  if (isMergeUsernameProofHubEvent(event)) {
     if (event.mergeUsernameProofBody.deletedUsernameProof) {
       if (event.mergeUsernameProofBody.deletedUsernameProofMessage) {
         const hash = bytesToHex(event.mergeUsernameProofBody.deletedUsernameProofMessage.hash);
@@ -58,12 +64,14 @@ export const getHubEventCacheKey = (event: HubEvent): string => {
       const signature = bytesToHex(event.mergeUsernameProofBody.usernameProof.signature);
       return `hub:evt:username:merge:${signature}`;
     }
-  } else if (isMergeOnChainHubEvent(event)) {
+  }
+  
+  if (isMergeOnChainHubEvent(event)) {
     const hash = bytesToHex(event.mergeOnChainEventBody.onChainEvent.transactionHash);
     const { logIndex } = event.mergeOnChainEventBody.onChainEvent;
     return `hub:evt:onchain:${hash}:${event.mergeOnChainEventBody.onChainEvent.type}:${logIndex}`;
   }
 
-  // we should never reach here, appease the compiler
+  // This point should be unreachable. All event types must have a corresponding cache key.
   throw new Error("Hub event is missing cache key");
 };
