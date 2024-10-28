@@ -71,7 +71,7 @@ export class EventStreamConnection {
   }
 
   /**
-   * Adds one or more event to the stream at the specified key.
+   * Adds one or more events to the stream at the specified key.
    */
   async add(key: string, data: Buffer | Buffer[]) {
     if (data instanceof Buffer) {
@@ -134,7 +134,7 @@ export class EventStreamConnection {
    * Returns specified number of events (default 1) that have been pending for the
    * given minimum amount of time.
    *
-   * Useful for re-processing events that were never `ack`ed by a consumer.
+   * Useful for re-processing events that were never acknowledged (acked) by a consumer.
    */
   async pending(key: string, consumerGroup: string, millis = 0, count = 1) {
     const result = await this.client.xpending(key, consumerGroup, "IDLE", millis, "-", "+", count);
@@ -189,9 +189,9 @@ export class EventStreamConnection {
   }
 
   /**
-   * Trims items from the stream older than the given timestamp.
+   *  Entries must be manually deleted, or the stream should be trimmed.
    *
-   * Does an approximate trim to reduce effort by Redis.
+   * Performs an approximate trim to reduce the load on Redis.
    */
   async trim(key: string, timestamp: Date) {
     return await this.client.xtrim(key, "MINID", "~", timestamp.getTime());
@@ -201,7 +201,7 @@ export class EventStreamConnection {
 const GROUP_NAME = "hub_events";
 const MAX_EVENTS_PER_FETCH = 10;
 const MESSAGE_PROCESSING_CONCURRENCY = 10;
-const EVENT_PROCESSING_TIMEOUT = 10_000; // How long before retrying processing (millis)
+const EVENT_PROCESSING_TIMEOUT = 10_000; // How long before retrying processing (in milliseconds)
 const EVENT_DELETION_THRESHOLD = 1000 * 60 * 60 * 24; // 1 day
 
 type PreProcessHandler = (events: HubEvent[], eventsBytes: Uint8Array[]) => Promise<ProcessResult[]>;
